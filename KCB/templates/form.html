@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Penilaian Kesehatan Premium</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/asset/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="form-illustration">
+            <img src="/static/asset/Life Science Hub Wales - Hospital illo.gif" alt="Ilustrasi Kesehatan" class="illustration-img">
+            <h2 class="illustration-title">Penilaian Risiko Stroke</h2>
+            <p class="illustration-subtitle">isi formulir ini untuk mendapatkan analisis kesehatan personal dari sistem kami</p>
+        </div>
+        
+        <div class="form-content">
+            <div class="form-header">
+                <h1>Data Kesehatan Anda</h1>
+                <p class="subtitle">Mohon isi data dengan sebenar-benarnya untuk hasil analisis yang akurat</p>
+            </div>
+            
+            {% if error %}
+            <div class="error-message">
+                <i class="fas fa-exclamation-circle"></i>
+                {{ error }}
+            </div>
+            {% endif %}
+
+            <form id="healthForm" class="form-grid" action="/predict" method="POST">
+                <div class="form-group full-width">
+                    <label for="name"><i class="fas fa-user"></i> Nama Lengkap</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="name" name="name" placeholder="Masukkan nama lengkap Anda" value="{{ request.form.get('name', '') }}" required>
+                        <div class="input-error-message" id="name-error"></div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-heartbeat"></i> Hipertensi
+                        <span class="tooltip">
+                            <i class="fas fa-info-circle"></i>
+                            <span class="tooltiptext">Kondisi tekanan darah tinggi (≥140/90 mmHg)</span>
+                        </span>
+                    </label>
+                    <div class="radio-group">
+                        <div class="radio-option">
+                            <input type="radio" id="hypertension_yes" name="hypertension" value="1" {% if request.form.get('hypertension') == '1' %}checked{% endif %}>
+                            <label for="hypertension_yes">Ya</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="hypertension_no" name="hypertension" value="0" {% if request.form.get('hypertension', '0') == '0' %}checked{% endif %}>
+                            <label for="hypertension_no">Tidak</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-heart"></i> Penyakit Jantung
+                        <span class="tooltip">
+                            <i class="fas fa-info-circle"></i>
+                            <span class="tooltiptext">Riwayat penyakit jantung koroner atau gagal jantung</span>
+                        </span>
+                    </label>
+                    <div class="radio-group">
+                        <div class="radio-option">
+                            <input type="radio" id="heart_disease_yes" name="heart_disease" value="1" {% if request.form.get('heart_disease') == '1' %}checked{% endif %}>
+                            <label for="heart_disease_yes">Ya</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="heart_disease_no" name="heart_disease" value="0" {% if request.form.get('heart_disease', '0') == '0' %}checked{% endif %}>
+                            <label for="heart_disease_no">Tidak</label>
+                        </div>
+                    </div>
+                </div>
+                
+<div class="form-group">
+    <label><i class="fas fa-tint"></i> Kadar Glukosa (mg/dL)
+        <span class="tooltip">
+            <i class="fas fa-info-circle"></i>
+            <span class="tooltiptext">Kadar gula darah puasa (55.22–271.74 mg/dL)</span>
+        </span>
+    </label>
+    <div class="input-wrapper">
+        <input type="number" id="avg_glucose_level" name="avg_glucose_level"
+               placeholder="Contoh: 90" min="55.22" max="271.74" step="0.01"
+               value="{{ request.form.get('avg_glucose_level', 90.0) }}">
+        <i class="fas fa-tint input-icon"></i>
+        <div class="input-error-message" id="glucose-error"></div>
+    </div>
+    <div class="range-container">
+        <div class="range-labels">
+            <span>55.22</span>
+            <span>163.48</span>
+            <span>271.74</span>
+        </div>
+        <input type="range" id="glucoseRange" min="55.22" max="271.74" step="0.01"
+               value="{{ request.form.get('avg_glucose_level', 90.0) }}">
+        <div class="value-indicator" id="glucoseValue">{{ request.form.get('avg_glucose_level', 90.0) }} mg/dL</div>
+    </div>
+</div>
+
+<!-- Bagian input BMI -->
+<div class="form-group">
+    <label><i class="fas fa-weight"></i> Indeks Massa Tubuh (BMI)
+        <span class="tooltip">
+            <i class="fas fa-info-circle"></i>
+            <span class="tooltiptext">Berat badan (kg) / (tinggi badan (m))²</span>
+        </span>
+    </label>
+    <div class="input-wrapper">
+        <input type="number" id="bmi" name="bmi" placeholder="Contoh: 22.5" min="21.00" max="78.00" step="0.01"
+               value="{{ request.form.get('bmi', 22.5) }}">
+        <i class="fas fa-weight input-icon"></i>
+        <div class="input-error-message" id="bmi-error"></div>
+    </div>
+    <div class="range-container">
+        <div class="range-labels">
+            <span>21.00</span>
+            <span>49.50</span>
+            <span>78.00</span>
+        </div>
+        <input type="range" id="bmiRange" min="21.00" max="78.00" step="0.01"
+               value="{{ request.form.get('bmi', 22.5) }}">
+        <div class="value-indicator" id="bmiValue">{{ request.form.get('bmi', 22.5) }}</div>
+    </div>
+</div>
+                
+                <div class="form-group full-width">
+                    <label><i class="fas fa-smoking"></i> Status Merokok
+                        <span class="tooltip">
+                            <i class="fas fa-info-circle"></i>
+                            <span class="tooltiptext">Status merokok saat ini atau sebelumnya</span>
+                        </span>
+                    </label>
+                    <select id="smoking_status" name="smoking_status">
+                        <option value="0" {% if request.form.get('smoking_status', '0') == '0' %}selected{% endif %}>Tidak pernah merokok</option>
+                        <option value="0.5" {% if request.form.get('smoking_status') == '0.5' %}selected{% endif %}>Mantan perokok</option>
+                        <option value="1" {% if request.form.get('smoking_status') == '1' %}selected{% endif %}>Perokok Aktif</option>
+                    </select>
+                </div>
+                
+                <div class="form-group full-width">
+                    <button type="submit" class="btn-submit">
+                        <i class="fas fa-chart-line"></i> Analisis Sekarang
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+function validateInput(input, min, max, errorId, errorMessage) {
+    const rawValue = input.value.replace(',', '.'); // menghindari koma
+    const value = parseFloat(rawValue);
+    const errorElement = document.getElementById(errorId);
+
+    if (isNaN(value) || value < min || value > max) {
+        input.classList.add('input-error');
+        errorElement.textContent = errorMessage;
+        errorElement.style.display = 'block';
+        return false;
+    } else {
+        input.classList.remove('input-error');
+        errorElement.style.display = 'none';
+        return true;
+    }
+}
+
+const glucoseRange = document.getElementById('glucoseRange');
+const glucoseInput = document.getElementById('avg_glucose_level');
+const glucoseValue = document.getElementById('glucoseValue');
+
+const bmiRange = document.getElementById('bmiRange');
+const bmiInput = document.getElementById('bmi');
+const bmiValue = document.getElementById('bmiValue');
+
+glucoseValue.style.opacity = '0';
+bmiValue.style.opacity = '0';
+
+let glucoseTimeout, bmiTimeout;
+
+function updateGlucoseValue() {
+    const value = glucoseRange.value;
+    glucoseInput.value = value;
+    glucoseValue.textContent = `${value} mg/dL`;
+    positionIndicator(glucoseRange, glucoseValue);
+    validateInput(glucoseInput, 55.22, 271.74, 'glucose-error', 'Masukkan nilai antara 55.22–271.74 mg/dL');
+    glucoseValue.style.opacity = '1';
+    clearTimeout(glucoseTimeout);
+}
+
+function updateBmiValue() {
+    const value = bmiRange.value;
+    bmiInput.value = value;
+    bmiValue.textContent = value;
+    positionIndicator(bmiRange, bmiValue);
+    validateInput(bmiInput, 21.00, 78.00, 'bmi-error', 'Masukkan nilai antara 21.00–78.00');
+    bmiValue.style.opacity = '1';
+    clearTimeout(bmiTimeout);
+}
+
+function positionIndicator(range, indicator) {
+    const percent = (range.value - range.min) / (range.max - range.min);
+    indicator.style.left = `${percent * 100}%`;
+}
+
+glucoseRange.addEventListener('input', updateGlucoseValue);
+glucoseRange.addEventListener('change', () => {
+    glucoseTimeout = setTimeout(() => { glucoseValue.style.opacity = '0'; }, 1000);
+});
+glucoseRange.addEventListener('mouseleave', () => {
+    glucoseValue.style.opacity = '0';
+});
+
+bmiRange.addEventListener('input', updateBmiValue);
+bmiRange.addEventListener('change', () => {
+    bmiTimeout = setTimeout(() => { bmiValue.style.opacity = '0'; }, 1000);
+});
+bmiRange.addEventListener('mouseleave', () => {
+    bmiValue.style.opacity = '0';
+});
+
+glucoseInput.addEventListener('input', () => {
+    glucoseRange.value = glucoseInput.value;
+    updateGlucoseValue();
+});
+
+bmiInput.addEventListener('input', () => {
+    bmiRange.value = bmiInput.value;
+    updateBmiValue();
+});
+
+document.getElementById('healthForm').addEventListener('submit', function (e) {
+    let isValid = true;
+
+    const nameInput = document.getElementById('name');
+    if (!nameInput.value.trim()) {
+        nameInput.classList.add('input-error');
+        document.getElementById('name-error').textContent = 'Nama lengkap harus diisi';
+        document.getElementById('name-error').style.display = 'block';
+        isValid = false;
+    } else {
+        nameInput.classList.remove('input-error');
+        document.getElementById('name-error').style.display = 'none';
+    }
+
+    if (!validateInput(glucoseInput, 55.22, 271.74, 'glucose-error', 'Masukkan nilai antara 55.22–271.74 mg/dL')) {
+        isValid = false;
+    }
+
+    if (!validateInput(bmiInput, 21.00, 78.00, 'bmi-error', 'Masukkan nilai antara 21.00–78.00')) {
+        isValid = false;
+    }
+
+    if (!isValid) {
+        e.preventDefault();
+        return;
+    }
+
+    const btn = this.querySelector('button[type="submit"]');
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+    btn.disabled = true;
+});
+
+updateGlucoseValue();
+updateBmiValue();
+</script>
+
+</body>
+</html>

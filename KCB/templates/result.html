@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hasil Analisis Kesehatan</title>
+    <link rel="stylesheet" href="/static/asset/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        .result-container {
+            padding: 40px;
+            animation: fadeIn 0.8s ease-out;
+        }
+        .result-header {
+            text-align: center;
+            margin-bottom: 40px;
+            position: relative;
+        }
+        .result-header::after {
+            content: '';
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 2px;
+        }
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+        }
+        .card-title {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-bottom: 20px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .risk-summary {
+            background: linear-gradient(135deg, var(--primary-light), var(--primary));
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+        .detail-list {
+            list-style: none;
+            padding: 0;
+        }
+        .detail-list li {
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1rem;
+            color: var(--dark);
+        }
+        .detail-list li:last-child {
+            border-bottom: none;
+        }
+        .detail-list li strong {
+            color: var(--primary);
+            font-weight: 600;
+        }
+        .chart-container {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        .chart {
+            width: 100%;
+            height: 400px;
+        }
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+        .btn-back:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(67, 97, 238, 0.4);
+        }
+        .info-content p {
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @media (max-width: 768px) {
+            .result-container {
+                padding: 20px;
+            }
+            .card {
+                padding: 20px;
+            }
+            .card-title {
+                font-size: 1.3rem;
+            }
+            .chart {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="result-container">
+            <div class="result-header">
+                <h1>Hasil Analisis Kesehatan</h1>
+                <p class="subtitle">Lihat hasil penilaian risiko stroke Anda berdasarkan data yang telah dimasukkan.</p>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title"><i class="fas fa-user"></i> Nama Lengkap</h2>
+                <p>{{ name | default("Nama tidak tersedia", true) }}</p>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title"><i class="fas fa-heartbeat"></i> Ringkasan Risiko</h2>
+                <p class="risk-summary">{{ risk_summary }}</p>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title"><i class="fas fa-chart-bar"></i> Detail Analisis</h2>
+                <ul class="detail-list">
+                    <li><strong>Hipertensi:</strong> {{ hypertension | default("Tidak diketahui", true) }}</li>
+                    <li><strong>Penyakit Jantung:</strong> {{ heart_disease | default("Tidak diketahui", true) }}</li>
+                    <li><strong>Kadar Glukosa:</strong> {{ "%.1f" | format(glucose | default(0)) }} mg/dL</li>
+                    <li><strong>Indeks Massa Tubuh (BMI):</strong> {{ "%.1f" | format(bmi | default(0)) }}</li>
+                    <li><strong>Status Merokok:</strong> {{ smoking | default("Tidak diketahui", true) }}</li>
+                    <li><strong>Risiko:</strong> {{ risk | default("Tidak diketahui", true) }}</li>
+                </ul>
+            </div>
+
+            {% for chart in bar_charts %}
+            <div class="card chart-container">
+                <h2 class="card-title"><i class="fas fa-chart-pie"></i> Grafik {{ loop.index }}</h2>
+                <div class="chart" id="chart-{{ loop.index }}"></div>
+                <script>
+                    var graphDiv = document.getElementById('chart-{{ loop.index }}');
+                    var chartDataStr = '{{ chart | safe }}';
+                    try {
+                        var chartData = JSON.parse(chartDataStr);
+                        if (chartData && chartData.data && chartData.layout) {
+                            Plotly.newPlot(graphDiv, chartData.data, chartData.layout, { responsive: true });
+                        } else {
+                            graphDiv.innerHTML = '<p style="color: red;">Data grafik tidak lengkap.</p>';
+                        }
+                    } catch (e) {
+                        console.error('Error parsing chart data:', e);
+                        graphDiv.innerHTML = '<p style="color: red;">Gagal memuat grafik. Periksa konsol untuk detail.</p>';
+                    }
+                </script>
+            </div>
+            {% endfor %}
+
+            <div class="card chart-container">
+                <h2 class="card-title"><i class="fas fa-chart-line"></i> Evaluasi Kualitas Klaster (DBI)</h2>
+                <div class="chart" id="dbi-chart"></div>
+                <script>
+                    var dbiData = JSON.parse('{{ dbi_chart | safe }}');
+                    Plotly.newPlot('dbi-chart', dbiData.data, dbiData.layout, {responsive: true});
+                </script>
+            </div>
+
+            <div class="card chart-container">
+                <h2 class="card-title"><i class="fas fa-chart-line"></i> Evaluasi Kualitas Klaster (Silhouette)</h2>
+                <div class="chart" id="silhouette-chart"></div>
+                <script>
+                    var silhouetteData = JSON.parse('{{ silhouette_chart | safe }}');
+                    Plotly.newPlot('silhouette-chart', silhouetteData.data, silhouetteData.layout, {responsive: true});
+                </script>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title"><i class="fas fa-info-circle"></i> Tentang Metrik Evaluasi Klaster</h2>
+                <div class="info-content">
+                    <p><strong>Davies-Bouldin Index (DBI):</strong> Mengukur seberapa baik pengelompokan dengan membandingkan jarak antar klaster dengan ukuran klaster itu sendiri. Nilai yang lebih rendah menunjukkan pengelompokan yang lebih baik.</p>
+                    <p><strong>Silhouette Score:</strong> Mengukur seberapa mirip suatu objek dengan klasternya sendiri dibandingkan dengan klaster lain. Nilai berkisar dari -1 hingga 1, di mana nilai lebih tinggi menunjukkan pengelompokan yang lebih baik.</p>
+                    <p>Dalam analisis ini, kami menggunakan k={{ best_k }} klaster yang memberikan keseimbangan terbaik antara kedua metrik ini.</p>
+                </div>
+            </div>
+
+            <a href="/" class="btn-back"><i class="fas fa-arrow-left"></i> Kembali ke Formulir</a>
+        </div>
+    </div>
+</body>
+</html>
